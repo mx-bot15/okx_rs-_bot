@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: '3.9'
       - name: Install dependencies
-        run: pip install ccxt pandas pandas_ta requests
+        run: pip install ccxt pandas pandas-ta requests
       - name: Run Scan
         env:
           OKX_API_KEY: ${{ secrets.OKX_API_KEY }}
