@@ -40,5 +40,5 @@ def run_scanner():
             continue
 
 # Buradaki alt tirelere dikkat: name ve main
-if name == "main":
+if __name__ == "__main__":
     run_scanner()
