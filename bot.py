@@ -2,9 +2,8 @@ import ccxt
 import pandas as pd
 import requests
 import os
-import time
 
-# API Bilgileri (GitHub Secrets'dan çekilir)
+# API Bilgileri
 API_KEY = os.getenv('OKX_API_KEY')
 SECRET_KEY = os.getenv('OKX_SECRET_KEY')
 PASSPHRASE = os.getenv('OKX_PASSPHRASE')
@@ -20,8 +19,8 @@ def get_rsi(prices, period=14):
 
 def run_scanner():
     exchange = ccxt.okx({'apiKey': API_KEY, 'secret': SECRET_KEY, 'password': PASSPHRASE})
-    markets = exchange.load_markets()
-    symbols = [s for s in markets if '/USDT' in s and markets[s]['active']]
+    exchange.load_markets()
+    symbols = [s for s in exchange.symbols if '/USDT' in s]
     
     for symbol in symbols:
         try:
