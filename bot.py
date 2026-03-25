@@ -3,7 +3,7 @@ import pandas as pd
 import requests
 import os
 
-# API Bilgileri
+# API Bilgileri (GitHub Secrets'tan çekilir)
 API_KEY = os.getenv('OKX_API_KEY')
 SECRET_KEY = os.getenv('OKX_SECRET_KEY')
 PASSPHRASE = os.getenv('OKX_PASSPHRASE')
@@ -20,6 +20,7 @@ def get_rsi(prices, period=14):
 def run_scanner():
     exchange = ccxt.okx({'apiKey': API_KEY, 'secret': SECRET_KEY, 'password': PASSPHRASE})
     exchange.load_markets()
+    # Sadece USDT çiftlerini tara
     symbols = [s for s in exchange.symbols if '/USDT' in s]
     
     for symbol in symbols:
@@ -38,5 +39,6 @@ def run_scanner():
         except:
             continue
 
+# Buradaki alt tirelere dikkat: name ve main
 if name == "main":
     run_scanner()
