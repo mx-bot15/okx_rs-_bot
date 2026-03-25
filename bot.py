@@ -1,56 +1,50 @@
-import ccxt
+import os
 import telebot
+import ccxt
+import pandas as pd
 import time
 
-# --- AYARLAR ---
-SYMBOL = 'BTC/USDT'
-TIMEFRAME = '1h'
-RSI_PERIOD = 14
-API_TOKEN = '7629531818:AAH97-mO75YqY11h2G8S-VqYy-N9S-Ait5M' # Senin Token
-CHAT_ID = '6419572628' # Senin ID
-bot = telebot.TeleBot(API_TOKEN)
+# --- GÜVENLİ AYARLAR (GitHub Secrets'tan okur) ---
+API_TOKEN = os.getenv('TELEGRAM_TOKEN')
+CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-def calculate_rsi_wilder(series, period=14):
-    delta = series.diff()
-    up = delta.clip(lower=0)
-    down = -1 * delta.clip(upper=0)
+bot = telebot.TeleBot(API_TOKEN)
+exchange = ccxt.okx()
+
+def calculate_rsi(data, window=14):
+    """Wilder's Smoothing Method ile RSI hesaplar."""
+    delta = data.diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
     
-    # İlk ortalamalar (Simple Moving Average)
-    ma_up = up[:period+1].mean()
-    ma_down = down[:period+1].mean()
-    
-    rsi = [0] * (period)
-    
-    # Wilder's Smoothing (Üstel Hareketli Ortalama benzeri)
-    for i in range(period, len(series)):
-        if i == period:
-            current_ma_up = ma_up
-            current_ma_down = ma_down
-        else:
-            current_ma_up = (current_ma_up * (period - 1) + up.iloc[i]) / period
-            current_ma_down = (current_ma_down * (period - 1) + down.iloc[i]) / period
-            
-        rs = current_ma_up / current_ma_down if current_ma_down != 0 else 0
-        rsi.append(100 - (100 / (1 + rs)))
-    return rsi[-1]
+    rs = gain / loss
+    rsi = 100 - (100 / (1 + rs))
+    return rsi
 
 def main():
     try:
-        exchange = ccxt.okx()
-        bars = exchange.fetch_ohlcv(SYMBOL, timeframe=TIMEFRAME, limit=100)
-        import pandas as pd
-        df = pd.DataFrame(bars, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-        
-        rsi_value = calculate_rsi_wilder(df['close'], RSI_PERIOD)
-        
-        msg = f"📊 {SYMBOL} ({TIMEFRAME})\n💰 Fiyat: {df['close'].iloc[-1]}\n🔥 RSI: {rsi_value:.2f}"
-        
-        # Sadece 30 altı veya 70 üstü değil, çalıştığını görmek için her zaman atsın dersen:
-        bot.send_message(CHAT_ID, msg)
-        print(f"Mesaj gönderildi: {rsi_value}")
+        # Sembol listesi (İstersen buraya daha fazla ekleyebilirsin)
+        symbols = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT']
+        results = []
+
+        for symbol in symbols:
+            # OKX'den son 100 mum verisini çek (1 saatlik periyot)
+            ohlcv = exchange.fetch_ohlcv(symbol, timeframe='1h', limit=100)
+            df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+            
+            # RSI Hesapla
+            df['rsi'] = calculate_rsi(df['close'])
+            last_rsi = round(df['rsi'].iloc[-1], 2)
+            
+            results.append(f"📊 *{symbol}*\nÖlçülen RSI: {last_rsi}")
+
+        # Mesajı birleştir ve gönder
+        final_msg = "🚀 *RSI Tarama Sonuçları (1s)*\n\n" + "\n\n".join(results)
+        bot.send_message(CHAT_ID, final_msg, parse_mode='Markdown')
+        print("Mesaj başarıyla gönderildi!")
 
     except Exception as e:
-        print(f"Hata: {e}")
+        print(f"Hata oluştu: {e}")
 
 if __name__ == "__main__":
     main()
