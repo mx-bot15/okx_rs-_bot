@@ -2,22 +2,30 @@ name: RSI Bot Runner
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Her saat başı çalışır
-  workflow_dispatch:      # Manuel çalıştırma butonu ekler
+    - cron: '0 * * * *'  # Her saat başı otomatik çalışır
+  workflow_dispatch:      # Senin elle "Run" butonuna basmanı sağlar
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Set up Python
-        uses: actions/checkout@v2 # Not: Burayı v2 yapalım daha stabil
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
 
       - name: Install dependencies
         run: |
-          pip install pandas ccxt pyTelegramBotAPI
+          python -m pip install --upgrade pip
+          pip install pyTelegramBotAPI ccxt pandas
 
       - name: Run bot
+        env:
+          # Burası çok kritik! Kasa ile kodu burada bağlıyoruz:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python bot.py
