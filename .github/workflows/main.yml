@@ -1,27 +1,29 @@
-name: RSI Bot Runner
+name: RSI Bot Turbo
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Her saatin 0. dakikasında otomatik çalıştır
-  workflow_dispatch:      # Manuel butonu da aktif tutar
+    # Her saatin 12. ve 42. dakikasında çalış (Trafikten kaçar)
+    - cron: "12,42 * * * *"
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
+          cache: 'pip' # Kütüphaneleri hafızaya alır, hızı artırır
 
       - name: Install dependencies
-        run: pip install pyTelegramBotAPI ccxt pandas
+        run: pip install -r requirements.txt
 
-      - name: Run bot
+      - name: Run Bot
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python bot.py
+        run: python main.py
