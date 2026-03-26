@@ -1,4 +1,3 @@
-pyTelegramBotAPI
+pandas==1.5.3
 ccxt
-pandas
-aiohttp
+pyTelegramBotAPI
