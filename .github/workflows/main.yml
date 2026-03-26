@@ -1,31 +1,30 @@
-name: RSI Bot Turbo
+name: Crypto RSI Bot
 
 on:
   schedule:
-    # Her saatin 12. ve 42. dakikasında çalış (Trafikten kaçar)
-    - cron: "12,42 * * * *"
-  workflow_dispatch: # Manuel çalıştırma butonu
+    - cron: "*/20 * * * *"  # Her 20 dakikada bir (00, 20, 40) otomatik çalışır
+  workflow_dispatch:        # İstediğin an "Run workflow" butonuyla elle çalıştırabilirsin
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-          cache: 'pip'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install pandas-ta ccxt python-telegram-bot
 
-      - name: Run Bot
+      - name: Run RSI Bot
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python main.py
+        run: python rsi_bot.py
