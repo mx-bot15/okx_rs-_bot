@@ -57,5 +57,5 @@ async def main():
     finally:
         await exchange.close()
 
-if name == "main":
+if __name__ == "__main__":
     asyncio.run(main())
